@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
@@ -40,6 +40,9 @@ async def user_login(User: User):
 
 # Genheylou Felisilda
 # Ensure CSV file exists with headers
+import os
+import csv
+
 CSV_FILE = "users.csv"
 if not os.path.exists(CSV_FILE):
     with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as file:
@@ -56,8 +59,8 @@ async def create_user(user: User):
 
     Returns:
         dict: A response indicating whether the user was successfully created.
-              - If successful, the status will be "User Created".
-              - If user already exists, a relevant message will be returned.
+            - If successful, the status will be "User Created".
+            - If user already exists, a relevant message will be returned.
     """
     users = []
     # Check if the file exists and read existing users
@@ -66,17 +69,17 @@ async def create_user(user: User):
             reader = csv.reader(file)
             next(reader, None)  # Skip header row
             users = list(reader)
-            
+
             # Check if the user already exists
             for row in users:
                 if row and row[0] == user.username:
                     raise HTTPException(status_code=400, detail="User already exists")
-    
+
     # Append the new user
     with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow([user.username, user.password])
-    
+
     return {"status": "User Created"}
 
 @app.post("/create_task/")
