@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+import csv
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -22,6 +22,7 @@ class Task(BaseModel):
     user: str
  
 # Implemented by Jezzel Faith Q. Gier
+CSV_FILE = "users.csv"
 @app.post("/login/")
 async def user_login(user: User):
     # Implemented by Jezzel
