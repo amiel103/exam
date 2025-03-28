@@ -85,7 +85,7 @@ async def get_tasks(name: str):
               - If no tasks are found for the user, an empty list will be returned.
     """
     tasks = []
-    tasks_file = 'data/tasks.csv'  # 👈 Update path if needed based on your repo
+    tasks_file = 'data/tasks.csv'
 
     if not os.path.exists(tasks_file):
         return {"tasks": []}
