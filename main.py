@@ -23,6 +23,19 @@ class Task(BaseModel):
  
 # Implemented by Jezzel Faith Q. Gier
 @app.post("/login/")
+ """
+    Handles the user login process. The function checks if the user exists in the users CSV file.
+    If the username and password match, the user is logged in successfully.
+
+    Args:
+        User (User): The username and password provided by the user.
+
+    Returns:
+        dict: A response indicating whether the login was successful or not.
+              - If successful, ttasktatus will be "Logged in".
+              - If failed (user not found or incorrect password), appropriate message will be returned.
+    """
+#My answer is here:
 async def user_login(user: User):
     try:
         with open(USERS_FILE, "r", newline="") as file:
