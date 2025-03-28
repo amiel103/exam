@@ -80,11 +80,21 @@ async def get_tasks(name: str):
         name (str): The username for which the tasks need to be fetched.
 
     Returns:
-        dict: A list of tasks (task description, deadline) associated with the given user.
+        dict: A list of tasks (task description, deadline, user) associated with the given user.
               - If tasks are found, the response will include the task details.
               - If no tasks are found for the user, an empty list will be returned.
     """
+    tasks = []
+    tasks_file = 'data/tasks.csv'
 
+    if not os.path.exists(tasks_file):
+        return {"tasks": []}
 
+    with open(tasks_file, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row['user'] == name:
+                tasks.append([row['task'], row['deadline'], row['user']])
 
-    return {"tasks": [ ['laba','2','a'] , ['study','6','a'] , ['code','10','a']  ] }
+    return {"tasks": tasks}
+
