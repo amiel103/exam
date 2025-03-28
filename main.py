@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException  # Fixed import
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import csv
+import os
 
 app = FastAPI()
 
@@ -12,6 +14,7 @@ app.add_middleware(
     allow_headers=["*"],  # This allows all headers
 )
 
+USERS_FILE = "users.csv"
 
 class User(BaseModel):
     username: str
@@ -25,7 +28,6 @@ class Task(BaseModel):
 # Implemented by Jezzel Faith Q. Gier
 @app.post("/login/")
 async def user_login(user: User):
-    # Implemented by Jezzel
     """
     Handles the user login process. The function checks if the user exists in the users CSV file.
     If the username and password match, the user is logged in successfully.
@@ -38,6 +40,18 @@ async def user_login(user: User):
               - If successful, status will be "Logged in".
               - If failed, appropriate message will be returned.
     """
+    if not os.path.exists(USERS_FILE):
+        raise HTTPException(status_code=500, detail="User database not found")
+
+    with open(USERS_FILE, "r", newline="") as file:
+        reader = csv.reader(file)
+        next(reader, None)  # Skip header row if present
+        for row in reader:
+            if len(row) == 2 and row[0].strip() == user.username and row[1].strip() == user.password:
+                return {"status": "Logged in"}
+    
+    raise HTTPException(status_code=401, detail="Invalid username or password")
+
 
 // implemented by Genheylou Felisilda
 @app.post("/create_user/")
