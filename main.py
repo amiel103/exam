@@ -22,21 +22,37 @@ class Task(BaseModel):
     user: str
  
 
+# Implemented by Jezzel Faith Q. Gier
+from fastapi import FastAPI, HTTPException
+import csv
+import os
+USERS_FILE = "users.csv"
 @app.post("/login/")
-async def user_login(User: User):
+async def user_login(user: User):
     """
     Handles the user login process. The function checks if the user exists in the users CSV file.
     If the username and password match, the user is logged in successfully.
 
     Args:
-        User (User): The username and password provided by the user.
+        user (User): The username and password provided by the user.
 
     Returns:
         dict: A response indicating whether the login was successful or not.
-              - If successful, ttasktatus will be "Logged in".
-              - If failed (user not found or incorrect password), appropriate message will be returned.
+              - If successful, status will be "Logged in".
+              - If failed, appropriate message will be returned.
     """
-    return {"status": "Logged in"}
+    if not os.path.exists(USERS_FILE):
+        raise HTTPException(status_code=500, detail="User database not found")
+
+    with open(USERS_FILE, "r", newline="") as file:
+        reader = csv.reader(file)
+        next(reader, None)  # Skip header row if present
+        for row in reader:
+            if len(row) == 2 and row[0].strip() == user.username and row[1].strip() == user.password:
+                return {"status": "Logged in"}
+    
+    raise HTTPException(status_code=401, detail="Invalid username or password")
+
 
 # Genheylou Felisilda
 # Ensure CSV file exists with headers
