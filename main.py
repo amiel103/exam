@@ -39,6 +39,13 @@ async def user_login(User: User):
     return {"status": "Logged in"}
 
 # Genheylou Felisilda
+# Ensure CSV file exists with headers
+CSV_FILE = "users.csv"
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(["username", "password"])
+
 @app.post("/create_user/")
 async def create_user(user: User):
     """
@@ -57,6 +64,7 @@ async def create_user(user: User):
     if os.path.exists(CSV_FILE):
         with open(CSV_FILE, mode="r", newline="", encoding="utf-8") as file:
             reader = csv.reader(file)
+            next(reader, None)  # Skip header row
             users = list(reader)
             
             # Check if the user already exists
