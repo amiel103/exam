@@ -72,7 +72,7 @@ async def create_task(Task: Task):
 
 @app.get("/get_tasks/")
 async def get_tasks(name: str):
-
+    # Implemented by Kimberly Vocales
     """
     Retrieves the list of tasks associated with a specific user.
 
