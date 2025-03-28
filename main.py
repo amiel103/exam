@@ -38,21 +38,37 @@ async def user_login(User: User):
     """
     return {"status": "Logged in"}
 
-
+# Genheylou Felisilda
 @app.post("/create_user/")
-async def create_user(User: User):
-    # my answer here .. .. . . .
+async def create_user(user: User):
     """
     Creates a new user by adding their username and password to the users CSV file.
 
     Args:
-        User (User): The username and password for the new user.
+        user (User): The username and password for the new user.
 
     Returns:
         dict: A response indicating whether the user was successfully created.
               - If successful, the status will be "User Created".
               - If user already exists, a relevant message will be returned.
     """
+    users = []
+    # Check if the file exists and read existing users
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, mode="r", newline="", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            users = list(reader)
+            
+            # Check if the user already exists
+            for row in users:
+                if row and row[0] == user.username:
+                    raise HTTPException(status_code=400, detail="User already exists")
+    
+    # Append the new user
+    with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([user.username, user.password])
+    
     return {"status": "User Created"}
 
 @app.post("/create_task/")
