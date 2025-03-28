@@ -23,20 +23,18 @@ class Task(BaseModel):
  
 # Implemented by Jezzel Faith Q. Gier
 @app.post("/login/")
-async def user_login(User: User):
-    """
-    Handles the user login process. The function checks if the user exists in the users CSV file.
-    If the username and password match, the user is logged in successfully.
+async def user_login(user: User):
+    try:
+        with open(USERS_FILE, "r", newline="") as file:
+            reader = csv.reader(file)
+            next(reader, None)  
+            for row in reader:
+                if len(row) == 2 and row[0] == user.username and row[1] == user.password:
+                    return {"status": "Logged in"}
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="User database not found")
 
-    Args:
-        User (User): The username and password provided by the user.
-
-    Returns:
-        dict: A response indicating whether the login was successful or not.
-              - If successful, ttasktatus will be "Logged in".
-              - If failed (user not found or incorrect password), appropriate message will be returned.
-    """
-    return {"status": "Logged in"}
 
 // implemented by Genheylou Felisilda
 @app.post("/create_user/")
