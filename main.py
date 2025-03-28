@@ -44,11 +44,6 @@ import os
 import csv
 
 CSV_FILE = "users.csv"
-if not os.path.exists(CSV_FILE):
-    with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow(["username", "password"])
-
 @app.post("/create_user/")
 async def create_user(user: User):
     """
