@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -12,6 +11,8 @@ app.add_middleware(
     allow_methods=["*"],  # This allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # This allows all headers
 )
+
+
 class User(BaseModel):
     username: str
     password: str 
@@ -21,7 +22,7 @@ class Task(BaseModel):
     deadline: str 
     user: str
  
-
+# Implemented by Jezzel Faith Q. Gier
 @app.post("/login/")
 async def user_login(User: User):
 
@@ -31,18 +32,18 @@ async def user_login(User: User):
     If the username and password match, the user is logged in successfully.
 
     Args:
-        User (User): The username and password provided by the user.
+        user (User): The username and password provided by the user.
 
     Returns:
         dict: A response indicating whether the login was successful or not.
-              - If successful, ttasktatus will be "Logged in".
-              - If failed (user not found or incorrect password), appropriate message will be returned.
+              - If successful, status will be "Logged in".
+              - If failed, appropriate message will be returned.
     """
-    return {"status": "Logged in"}
 
-
+# implemented by Genheylou Felisilda
 @app.post("/create_user/")
 async def create_user(User: User):
+    # my answer here .. .. . . .
     """
     Creates a new user by adding their username and password to the users CSV file.
 
@@ -55,7 +56,7 @@ async def create_user(User: User):
               - If user already exists, a relevant message will be returned.
     """
     return {"status": "User Created"}
-
+# implemented by Aubrey
 @app.post("/create_task/")
 async def create_task(Task: Task):
     """
@@ -72,7 +73,7 @@ async def create_task(Task: Task):
 
 @app.get("/get_tasks/")
 async def get_tasks(name: str):
-
+    # Implemented by Kimberly Vocales
     """
     Retrieves the list of tasks associated with a specific user.
 
@@ -80,11 +81,21 @@ async def get_tasks(name: str):
         name (str): The username for which the tasks need to be fetched.
 
     Returns:
-        dict: A list of tasks (task description, deadline) associated with the given user.
+        dict: A list of tasks (task description, deadline, user) associated with the given user.
               - If tasks are found, the response will include the task details.
               - If no tasks are found for the user, an empty list will be returned.
     """
+    tasks = []
+    tasks_file = 'data/tasks.csv'
 
+    if not os.path.exists(tasks_file):
+        return {"tasks": []}
 
+    with open(tasks_file, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row['user'] == name:
+                tasks.append([row['task'], row['deadline'], row['user']])
 
-    return {"tasks": [ ['laba','2','a'] , ['study','6','a'] , ['code','10','a']  ] }
+    return {"tasks": tasks}
+
