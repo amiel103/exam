@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from pydantic import BaseModel
 
-DATABASE_URL="insert your external url here"
+DATABASE_URL="postgresql://airyll_user:iKiLhVkL0nHuRn2BFTsGWdmM4vEQI7Ls@dpg-d0k5tbruibrs73983cs0-a.singapore-postgres.render.com/airyll"
 engine = create_engine(DATABASE_URL,  client_encoding='utf8')
 
 connection = engine.connect()
@@ -20,6 +20,28 @@ app.add_middleware(
     allow_methods=["*"],  # This allows all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # This allows all headers
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Creates the users table if it doesn't exist when the FastAPI application starts.
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL
+                );
+            """))
+            conn.commit() # Commit the transaction to ensure table creation is saved
+        print("Users table checked/created successfully!")
+    except Exception as e:
+        print(f"Error creating users table: {e}")
+        # You might want to raise the exception or handle it more robustly
+        # depending on your application's error handling strategy.
+
 class User(BaseModel):
     username: str
     password: str 
@@ -30,28 +52,62 @@ class Task(BaseModel):
     user: str
 
 
-@app.post("/login/")
-async def user_login(User: User):
-
-    result = connection.execute(
-        text("""
-            insert your query here
-            """
-        )
-    )
+@app.post("/login/") #airyllsanchez
+async def user_login(user: User):
     """
-    Handles the user login process. The function checks if the user exists in the users CSV file.
+    Handles the user login process. The function checks if the user exists in the users table.
     If the username and password match, the user is logged in successfully.
 
     Args:
-        User (User): The username and password provided by the user.
+        user (User): A Pydantic model containing:
+            - username (str): The username provided by the user.
+            - password (str): The corresponding password.
 
     Returns:
         dict: A response indicating whether the login was successful or not.
-            - If successful, ttasktatus will be "Logged in".
-            - If failed (user not found or incorrect password), appropriate message will be returned.
+            - If successful, the response will be: {"status": "Logged in"}
+            - If failed, the response will be: {"status": "Invalid username or password"}
+            - If an internal error occurs, the response will include the error detail.
     """
-    return {"status": "Logged in"}
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("""
+                    SELECT * FROM users
+                    WHERE username = :username AND password = :password
+                """),
+                {"username": user.username, "password": user.password}
+            ).fetchone()
+
+        if result:
+            return {"status": "Logged in"}
+        else:
+            return {"status": "Invalid username or password"}
+
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+# This is a simple way to get a user into the DB for testing the login.
+@app.on_event("startup")
+async def create_test_user():
+    try:
+        with engine.connect() as conn:
+            # Check if a user with 'testuser' already exists
+            user_exists = conn.execute(
+                text("SELECT * FROM users WHERE username = :username"),
+                {"username": "testuser"}
+            ).fetchone()
+
+            if not user_exists:
+                conn.execute(
+                    text("INSERT INTO users (username, password) VALUES (:username, :password)"),
+                    {"username": "testuser", "password": "testpassword"}
+                )
+                conn.commit()
+                print("Test user 'testuser' created successfully!")
+            else:
+                print("Test user 'testuser' already exists.")
+    except Exception as e:
+        print(f"Error creating test user: {e}")
 
 
 @app.post("/create_user/")
