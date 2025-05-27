@@ -106,7 +106,7 @@ async def get_tasks(name: str):
 
     return {"tasks": [ ['laba','2','a'] , ['study','6','a'] , ['code','10','a']  ] }
 
-@app.post("/complete_task/")
+@app.post("/complete_task/") #sanchezairyll
 async def complete_task(data: TaskCompletion):
     """
     Marks a specific task as completed or not completed.
