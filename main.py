@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy import create_engine, inspect
@@ -34,43 +34,75 @@ class TaskCompletion(BaseModel):
     is_completed: bool
 
 
+# Implemented by Jezzel Faith Q. Gier
+from fastapi import FastAPI, HTTPException
+import csv
+import os
+USERS_FILE = "users.csv"
 @app.post("/login/")
-async def user_login(User: User):
-
-    result = connection.execute(
-        text("""
-            insert your query here
-            """
-        )
-    )
+async def user_login(user: User):
     """
     Handles the user login process. The function checks if the user exists in the users CSV file.
     If the username and password match, the user is logged in successfully.
 
     Args:
-        User (User): The username and password provided by the user.
+        user (User): The username and password provided by the user.
 
     Returns:
         dict: A response indicating whether the login was successful or not.
-            - If successful, ttasktatus will be "Logged in".
-            - If failed (user not found or incorrect password), appropriate message will be returned.
+              - If successful, status will be "Logged in".
+              - If failed, appropriate message will be returned.
     """
-    return {"status": "Logged in"}
+    if not os.path.exists(USERS_FILE):
+        raise HTTPException(status_code=500, detail="User database not found")
+
+    with open(USERS_FILE, "r", newline="") as file:
+        reader = csv.reader(file)
+        next(reader, None)  # Skip header row if present
+        for row in reader:
+            if len(row) == 2 and row[0].strip() == user.username and row[1].strip() == user.password:
+                return {"status": "Logged in"}
+    
+    raise HTTPException(status_code=401, detail="Invalid username or password")
 
 
+# Genheylou Felisilda
+# Ensure CSV file exists with headers
+import os
+import csv
+
+CSV_FILE = "users.csv"
 @app.post("/create_user/")
-async def create_user(User: User):
+async def create_user(user: User):
     """
     Creates a new user by adding their username and password to the users CSV file.
 
     Args:
-        User (User): The username and password for the new user.
+        user (User): The username and password for the new user.
 
     Returns:
         dict: A response indicating whether the user was successfully created.
             - If successful, the status will be "User Created".
             - If user already exists, a relevant message will be returned.
     """
+    users = []
+    # Check if the file exists and read existing users
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, mode="r", newline="", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Skip header row
+            users = list(reader)
+
+            # Check if the user already exists
+            for row in users:
+                if row and row[0] == user.username:
+                    raise HTTPException(status_code=400, detail="User already exists")
+
+    # Append the new user
+    with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([user.username, user.password])
+
     return {"status": "User Created"}
 
 @app.post("/create_task/")
