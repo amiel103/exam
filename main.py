@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from pydantic import BaseModel
 
-DATABASE_URL="insert your external url here"
+DATABASE_URL="postgresql://airyll_user:iKiLhVkL0nHuRn2BFTsGWdmM4vEQI7Ls@dpg-d0k5tbruibrs73983cs0-a.singapore-postgres.render.com/airyll"
 engine = create_engine(DATABASE_URL,  client_encoding='utf8')
 
 connection = engine.connect()
@@ -28,6 +28,10 @@ class Task(BaseModel):
     task: str
     deadline: str 
     user: str
+
+class TaskCompletion(BaseModel):
+    task_id: int
+    is_completed: bool
 
 
 @app.post("/login/")
@@ -101,3 +105,32 @@ async def get_tasks(name: str):
 
 
     return {"tasks": [ ['laba','2','a'] , ['study','6','a'] , ['code','10','a']  ] }
+
+@app.post("/complete_task/")
+async def complete_task(data: TaskCompletion):
+    """
+    Marks a specific task as completed or not completed.
+
+    Args:
+        data (Task Completion): Contains task_id and desired is_completed status.
+
+    Returns:
+        dict: A response indicating whether the update was successful.
+    """
+    try:
+        # Ensure your database connection and table/column names are correct
+        connection.execute(
+            text("""
+                UPDATE tasks
+                SET is_completed = :is_completed
+                WHERE id = :task_id
+            """),
+            {"is_completed": data.is_completed, "task_id": data.task_id}
+        )
+        connection.commit() # Important for DML operations to save changes
+        return {"status": "Task completion updated"}
+    except Exception as e:
+        # Basic error handling - you might want more specific SQLAlchemy error handling
+        print(f"Database error: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="Internal Server Error during task completion")
